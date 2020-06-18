@@ -44,7 +44,7 @@
       "category": "public.app-category.developer-tools"
     },
     "linux": {
-      "target": ["AppImage", "tar.gz", "pacman"]
+      "target": ["AppImage", "dir"]
     },
     "win": {
       "target": ["nsis", "portable"]
