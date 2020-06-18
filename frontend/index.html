@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="static/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Bilibili Live API Hacker" />
+    <script>
+        const config = require("./config.json");
+        const jQuery = require("jquery");
+        const $ = jQuery;
+        const axios = require("axios");
+    </script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@v2.6.11/dist/vue.min.js"></script>
+    <title>getPlayUrl - Bilibili Live API Hacker</title>
+</head>
+
+<body>
+    <div class="ui small top fixed menu">
+        <div class="ui container">
+            <div class="item">
+                <img src="static/logo.png" alt="logo" />
+            </div>
+            <div class="item">
+                getPlayUrl
+            </div>
+            <div class="right item">
+                <a href="https://github.com/CytoidCommunity/getPlayUrl" target="_blank" rel="noreferrer">
+                    <i class="github icon"></i>
+                    在 GitHub 上查看源代码
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="ui container" style="margin-top: 7em;">
+        <div class="ui segments">
+            <div class="ui placeholder segment" id="worker">
+                <div class="ui icon header">
+                    <template v-if="stat">
+                        <i class="check icon" />
+                        <div class="content">
+                            <div class="sub header">
+                                成功连接至 {{ws.url}}
+                            </div>
+                        </div>
+                    </template>
+                    <div v-else class="ui active inline indeterminate text loader">连接中...</div>
+                </div>
+                <div class="ui statistic">
+                    <div class="value">{{cnt}}</div>
+                    <div class="label">Times</div>
+                </div>
+            </div>
+            <div class="ui yellow segment">
+                <h2 class="ui header">说明</h2 class="ui header">
+                <p>getPlayUrl 是一个用来打破 Bilibili Live API 封锁的工具。</p>
+                <p>因为 Bilibili Live 的 playUrl API 把国内大部分主机商的服务器ban了，所以就有了这个工具。</p>
+                <h2 class="ui header">原理</h2 class="ui header">
+                <p>
+                    分为后端和前端。
+                    <br />
+                    后端维护一个 WebSocket 服务和 playUrl API，前端（就是本页面）将会与后端的 WebSocket 服务连接。
+                    <br />
+                    当有用户调用 playUrl API 时，后端服务器将会在所有连接的前端页面里随机选择一个，并将请求发送至该页面。
+                    <br />
+                    接下来，该页面将会调用 Bilibili Live 的 playUrl API，并将结果通过 WebSocket 返回至服务器。
+                    <br />
+                    最后，服务器将结果返回给提出请求的用户。
+                </p>
+                <h2 class="ui header">使用方法</h2 class="ui header">
+                <p>您只需要将原先您的程序中对 Bilibili Live API 的调用的 URL 地址改为 getPlayUrl 服务地址即可。</p>
+                <p>您可以自行部署后端，或者使用我们的公共服务：</p>
+                <div class="ui two steps">
+                    <div class="step">
+                        <i class="close icon"></i>
+                        <div class="content">
+                            <div class="title">原来：</div>
+                            <div class="description">
+                                https://api.live.bilibili.com/room/v1/Room/playUrl?cid=8123199&quality=4</div>
+                        </div>
+                    </div>
+                    <div class="completed step">
+                        <i class="check icon"></i>
+                        <div class="content">
+                            <div class="title">现在：</div>
+                            <div class="description">
+                                <script>
+                                    document.write(config.secure ? "https" : "http", "://");
+                                    document.write(`${config.host}:${config.port}`);
+                                </script>
+                                /playUrl?cid=8123199&quality=4
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var app = new Vue({
+            el: "#worker",
+            data: {
+                ws: null,
+                stat: 0,
+                cnt: 0,
+                timeout: 250
+            },
+            created: function () {
+                this.connect();
+            },
+            methods: {
+                connect() {
+                    const url = `${(config.secure ? 'wss' : 'ws')}://${config.host}:${config.port}/ws`;
+                    const ws = new WebSocket(url);
+                    var connectTimeout;
+
+                    ws.onopen = () => {
+                        console.log('connected to ', ws.url);
+                        this.ws = ws;
+                        this.stat = 1;
+                        this.timeout = 250;
+                        clearTimeout(connectTimeout);
+                    }
+
+                    ws.onclose = () => {
+                        this.stat = 0;
+                        this.ws = null;
+                        console.log('disconnected. retrying...');
+                        this.timeout = Math.min(30000, this.timeout * 2);
+                        connectTimeout = setTimeout(this.check, this.timeout);
+                    };
+
+                    ws.onerror = () => {
+                        ws.close();
+                    };
+
+                    ws.onmessage = msg => {
+                        if (msg.type === 'message') {
+                            const data = JSON.parse(msg.data);
+                            axios.get('http://api.live.bilibili.com/room/v1/Room/playUrl', {
+                                params: {
+                                    cid: data.cid,
+                                    quality: data.quality
+                                }
+                            })
+                                .then(res => {
+                                    console.log(res);
+                                    ws.send(JSON.stringify(res.data));
+                                    this.cnt += 1;
+                                })
+                                .catch(err => {
+                                    console.log(err);
+                                })
+                        }
+                    };
+                },
+                check() {
+                    const ws = this.ws;
+                    if (!ws || ws.readyState === WebSocket.CLOSED) this.connect();
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>

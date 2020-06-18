@@ -1,0 +1,53 @@
+{
+  "name": "get_play_url",
+  "description": "Bilibili Live API Hacker",
+  "version": "0.1.0",
+  "private": false,
+  "main": "index.js",
+  "license": "MIT",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/CytoidCommunity/getPlayUrl.git"
+  },
+  "author": {
+    "name": "CytoidCommunity",
+    "email": "community@cytoid.io",
+    "url": "https://cytoidcommunity.github.io/"
+  },
+  "contributors": [
+    {
+      "name": "AsakuraMizu",
+      "email": "0xWATERx0@gmail.com"
+    }
+  ],
+  "scripts": {
+    "start": "electron .",
+    "package": "electron-builder build",
+    "package-all": "electron-builder build -mwl",
+    "package-mac": "electron-builder build --mac",
+    "package-linux": "electron-builder build --linux",
+    "package-win": "electron-builder build --win --x64"
+  },
+  "devDependencies": {
+    "electron": "^9.0.4",
+    "electron-builder": "^22.7.0"
+  },
+  "dependencies": {
+    "axios": "^0.19.2",
+    "jquery": "^3.5.1"
+  },
+  "build": {
+    "appId": "community.cytoid.getPlayUrl",
+    "productName": "getPlayUrl",
+    "copyright": "Copyright © 2020 CytoidCommunity",
+    "mac": {
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": ["AppImage", "tar.gz", "pacman"]
+    },
+    "win": {
+      "target": ["nsis", "portable"]
+    }
+  }
+}
