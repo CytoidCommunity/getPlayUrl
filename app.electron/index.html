@@ -55,10 +55,10 @@
                 </div>
             </div>
             <div class="ui yellow segment">
-                <h2 class="ui header">说明</h2 class="ui header">
+                <h2 class="ui header">说明</h2>
                 <p>getPlayUrl 是一个用来打破 Bilibili Live API 封锁的工具。</p>
                 <p>因为 Bilibili Live 的 playUrl API 把国内大部分主机商的服务器ban了，所以就有了这个工具。</p>
-                <h2 class="ui header">原理</h2 class="ui header">
+                <h2 class="ui header">原理</h2>
                 <p>
                     分为后端和前端。
                     <br />
@@ -70,7 +70,7 @@
                     <br />
                     最后，服务器将结果返回给提出请求的用户。
                 </p>
-                <h2 class="ui header">使用方法</h2 class="ui header">
+                <h2 class="ui header">使用方法</h2>
                 <p>您只需要将原先您的程序中对 Bilibili Live API 的调用的 URL 地址改为 getPlayUrl 服务地址即可。</p>
                 <p>您可以自行部署后端，或者使用我们的公共服务：</p>
                 <div class="ui two steps">
@@ -90,8 +90,7 @@
                                 <script>
                                     document.write(config.secure ? "https" : "http", "://");
                                     document.write(`${config.host}:${config.port}`);
-                                </script>
-                                /playUrl?cid=8123199&quality=4
+                                </script>/playUrl?cid=8123199&quality=4
                             </div>
                         </div>
                     </div>
@@ -140,11 +139,8 @@
                     ws.onmessage = msg => {
                         if (msg.type === 'message') {
                             const data = JSON.parse(msg.data);
-                            axios.get('http://api.live.bilibili.com/room/v1/Room/playUrl', {
-                                params: {
-                                    cid: data.cid,
-                                    quality: data.quality
-                                }
+                            axios.get('https://api.live.bilibili.com/room/v1/Room/playUrl', {
+                                params: data
                             })
                                 .then(res => {
                                     console.log(res);
